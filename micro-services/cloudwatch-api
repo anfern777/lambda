@@ -1,0 +1,25 @@
+const AWS = require('aws-sdk');
+const cloudwatch = new AWS.CloudWatch();
+
+exports.handler = async (event, context) => {
+    // parse the incoming logs from the event body
+    const logs = JSON.parse(event.body);
+
+    // prepare the CloudWatch log event object
+    const logEvent = {
+        logGroupName: 'LOG_GROUP_NAME',
+        logStreamName: 'LOG_STREAM_NAME',
+        logEvents: logs.map(log => ({
+            message: log,
+            timestamp: Date.now()
+        }))
+    };
+
+    // publish the logs to CloudWatch
+    try {
+        await cloudwatch.putLogEvents(logEvent).promise();
+        return { statusCode: 200, body: 'Logs published successfully' };
+    } catch (err) {
+        return { statusCode: 500, body: 'Failed to publish logs: ' + err };
+    }
+};
